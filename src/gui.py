@@ -114,6 +114,25 @@ class MinimalTrucoGUI:
                     fill="#22c55e", outline=col, width=1.5, tags=tag
                 )
 
+    def _card(self, x: int, y: int, card: Card, tag: str, active: bool):
+            col = SUIT_COLOR[card.suit]
+            self.canvas.create_rectangle(
+                x, y, x + 75, y + 95,
+                fill="#fffdf8", outline="#facc15" if active else "#222",
+                width=2 if active else 1, tags=tag
+            )
+            self.canvas.create_text(x + 16, y + 15, text=str(card.rank), fill=col, font=("Sans", 11, "bold"), tags=tag)
+            self._draw_suit(x + 56, y + 16, card.suit, s=0.55, tag=tag)
+            self._draw_suit(x + 37, y + 48, card.suit, s=1.05, tag=tag)
+            label = FIG_NAME.get(card.rank, f"Env {card.envido_value()}")
+            self.canvas.create_text(x + 37, y + 81, text=label, fill="#555", font=("Sans", 8), tags=tag)
+    
+        def _mini_card(self, x: int, y: int, card: Card):
+            col = SUIT_COLOR[card.suit]
+            self.canvas.create_rectangle(x, y, x + 75, y + 50, fill="#fffdf8", outline="#222")
+            self.canvas.create_text(x + 24, y + 25, text=str(card.rank), fill=col, font=("Sans", 10, "bold"))
+            self._draw_suit(x + 50, y + 25, card.suit, s=0.65)
+
 def main():
     root = tk.Tk()
     MinimalTrucoGUI(root)
