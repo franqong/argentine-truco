@@ -1,4 +1,6 @@
-# Argentine Truco: A Card Game
+<p align="center">
+  <img src="assets/logo.png" width="200" alt="Argentine Truco">
+</p>
 
 A 1v1 version of the **Argentine Truco** card game in Python against an AI, separating the game logic (`src/core.py`) from a **Tkinter** graphical interface (`src/gui.py`).
 Final project for the **Code in Place X** course (Stanford University).
