@@ -256,14 +256,16 @@ class MinimalTrucoGUI:
             self.state.player_is_hand = not self.state.player_is_hand
             self.root.after(800, self.start_round)
         elif act == "raise":
-            self.state.truco_level += 1
+            # El jugador cantó el escalón actual y la IA lo acepta y sube al siguiente
+            self.state.truco_level += 2
             self.state.truco_owner = "ai"
             self.awaiting = "truco"
             self.msg = f"AI raised {self.state.next_truco_name().upper()} ({self.state.next_truco_points()} pts)"
             self.render()
         else:
+            # La IA acepta el canto del jugador; el jugador sigue siendo quien lo cantó
             self.state.truco_level += 1
-            self.state.truco_owner = "ai"
+            self.state.truco_owner = "player"
             self.msg = f"AI wanted — Round worth {self.state.current_hand_points()} pts"
             self.render()
 
@@ -280,14 +282,16 @@ class MinimalTrucoGUI:
             self.state.player_is_hand = not self.state.player_is_hand
             self.root.after(800, self.start_round)
         elif choice == "quiero":
+            # El jugador acepta el canto de la IA; la IA mantiene truco_owner para que el jugador pueda subir luego
             self.state.truco_level += 1
-            self.state.truco_owner = "player"
+            self.state.truco_owner = "ai"
             self.awaiting = None
             self.msg = f"Wanted — Round worth {self.state.current_hand_points()} pts"
             self.render()
             if not self.turn_player:
                 self.root.after(500, self.ai_step)
         else:
+            # El jugador acepta el canto de la IA y sube al siguiente escalón
             self.state.truco_level += 1
             self.state.truco_owner = "player"
             self.awaiting = None

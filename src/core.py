@@ -135,6 +135,8 @@ def compute_envido_stakes(chain: list[str], state: GameState) -> tuple[int, int]
 def get_envido_raises(chain: list[str]) -> list[str]:
     if len(chain) >= 3:
         return []
+    if chain == ["envido", "envido"]:
+        return ["falta envido"]
     out = []
     if len(chain) == 1 and chain[-1] == "envido":
         out.append("envido")
