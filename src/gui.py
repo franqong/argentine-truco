@@ -67,6 +67,52 @@ class MinimalTrucoGUI:
         self.resp_bar = tk.Frame(root)
         self.resp_bar.pack(pady=2)
 
+    def _draw_suit(self, cx: float, cy: float, suit: str, s: float = 1.0, tag: str = ""):
+            col = SUIT_COLOR[suit]
+            if suit == "Gold":
+                r1, r2 = 12 * s, 6 * s
+                self.canvas.create_oval(cx - r1, cy - r1, cx + r1, cy + r1, fill="#f59e0b", outline=col, width=2, tags=tag)
+                self.canvas.create_oval(cx - r2, cy - r2, cx + r2, cy + r2, fill="#fffdf8", outline=col, width=1, tags=tag)
+            elif suit == "Cups":
+                self.canvas.create_arc(
+                    cx - 11 * s, cy - 13 * s, cx + 11 * s, cy + 3 * s,
+                    start=180, extent=180, fill=col, outline=col, tags=tag
+                )
+                self.canvas.create_line(cx, cy + 3 * s, cx, cy + 11 * s, fill=col, width=max(1, int(2.5 * s)), tags=tag)
+                self.canvas.create_line(cx - 8 * s, cy + 11 * s, cx + 8 * s, cy + 11 * s, fill=col, width=max(1, int(2.5 * s)), tags=tag)
+            elif suit == "Spades":
+                # Espada en diagonal (/)
+                self.canvas.create_line(
+                    cx - 10 * s, cy + 10 * s, cx + 8 * s, cy - 8 * s,
+                    fill=col, width=max(2, int(3.5 * s)), tags=tag
+                )
+                self.canvas.create_polygon(
+                    cx + 12 * s, cy - 12 * s,
+                    cx + 4 * s, cy - 8 * s,
+                    cx + 8 * s, cy - 4 * s,
+                    fill=col, outline=col, tags=tag
+                )
+                self.canvas.create_line(
+                    cx - 4 * s, cy - 2 * s, cx + 4 * s, cy + 6 * s,
+                    fill=col, width=max(1, int(2.5 * s)), tags=tag
+                )
+                self.canvas.create_line(
+                    cx, cy + 2 * s, cx - 12 * s, cy + 14 * s,
+                    fill="#3b82f6", width=max(1, int(2.5 * s)), tags=tag
+                )
+            else:  # Clubs (Basto)
+                self.canvas.create_line(
+                    cx - 9 * s, cy - 9 * s, cx + 9 * s, cy + 9 * s,
+                    fill=col, width=max(2, int(4 * s)), tags=tag
+                )
+                self.canvas.create_oval(
+                    cx - 12 * s, cy - 12 * s, cx - 4 * s, cy - 4 * s,
+                    fill="#22c55e", outline=col, width=1.5, tags=tag
+                )
+                self.canvas.create_oval(
+                    cx + 4 * s, cy + 4 * s, cx + 12 * s, cy + 12 * s,
+                    fill="#22c55e", outline=col, width=1.5, tags=tag
+                )
 
 def main():
     root = tk.Tk()
