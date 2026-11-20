@@ -154,3 +154,67 @@ def resolve_envido(state: GameState) -> tuple[str, int, int]:
     return ("player" if state.player_is_hand else "ai"), p, a
 
 
+def resolve_hand(p_card: Card, a_card: Card) -> str:
+    if p_card.card_power() > a_card.card_power():
+        return "player"
+    if a_card.card_power() > p_card.card_power():
+        return "ai"
+    return "tie"
+
+
+def is_round_over(state: GameState) -> bool:
+    h = state.hands_history
+    p_w, a_w = h.count("player"), h.count("ai")
+
+    # Alguien llegó a 2 manos ganadas
+    if p_w == 2 or a_w == 2:
+        return True
+
+    # Se jugaron las 3 manos
+    if len(h) == 3:
+        return True
+
+    # 1ra parda y 2da ganada por X: la ronda ya se define a favor de X
+    if len(h) == 2 and h[0] == "tie" and h[1] in ("player", "ai"):
+        return True
+
+    # 1ra ganada por X y 2da parda: la ronda se define a favor de X sin jugar 3ra
+    if len(h) == 2 and h[1] == "tie" and h[0] in ("player", "ai"):
+        return True
+
+    return False
+
+
+def round_winner(state: GameState) -> str:
+    h = state.hands_history
+    p_w, a_w = h.count("player"), h.count("ai")
+    mano = "player" if state.player_is_hand else "ai"
+
+    # Quien llegó a 2 manos ganadas
+    if p_w == 2:
+        return "player"
+    if a_w == 2:
+        return "ai"
+
+    # Si hubo parda en la 1ra mano, define la 2da; si también se parda, define la 3ra
+    if len(h) >= 1 and h[0] == "tie":
+        if len(h) >= 2 and h[1] in ("player", "ai"):
+            return h[1]
+        if len(h) >= 3 and h[2] in ("player", "ai"):
+            return h[2]
+        return mano
+
+    # Si se ganó en la 1ra y se pardó en la 2da, gana quien ganó la 1ra
+    if len(h) >= 2 and h[1] == "tie" and h[0] in ("player", "ai"):
+        return h[0]
+
+    # Si se llega a la 3ra con 1 mano cada uno y se parda en la 3ra, gana el mano
+    if len(h) == 3 and h[2] == "tie":
+        return mano
+
+    if p_w != a_w:
+        return "player" if p_w > a_w else "ai"
+
+    return mano
+
+
