@@ -205,7 +205,45 @@ class MinimalTrucoGUI:
         if self.p_card:
             self.root.after(500, self.finish_hand)
 
+    def finish_hand(self):
+            if not self.p_card or not self.a_card:
+                return
+            w = resolve_hand(self.p_card, self.a_card)
+            self.state.hands_history.append(w)
+            self.turn_player = True if w == "player" else (False if w == "ai" else self.lead_player)
+            self.lead_player = self.turn_player
+            self.p_card = None
+            self.a_card = None
+            self.msg = {"player": "You won hand", "ai": "AI won hand", "tie": "Parda (Hand tied)"}[w]
+            self.render()
+    
+            if is_round_over(self.state):
+                self.root.after(700, self.finish_round)
+            elif not self.turn_player:
+                self.root.after(500, self.ai_step)
 
+    def finish_round(self):
+        if not self.state.round_over:
+            w = round_winner(self.state)
+            pts = self.state.current_hand_points()
+            self.state.award_points(w, pts)
+            self.state.round_over = True
+            self.msg = f"{'You' if w == 'player' else 'AI'} won round (+{pts})"
+            self.render()
+        self.state.player_is_hand = not self.state.player_is_hand
+        self.root.after(900, self.end_match if self.state.match_winner() else self.start_round)
+
+    def fold(self):
+        if self.state.round_over:
+            return
+        pts = self.state.current_hand_points()
+        self.state.award_points("ai", pts)
+        self.state.round_over = True
+        self.awaiting = None
+        self.msg = f"Folded — AI +{pts}"
+        self.render()
+        self.state.player_is_hand = not self.state.player_is_hand
+        self.root.after(800, self.start_round)
 
 def main():
     root = tk.Tk()
