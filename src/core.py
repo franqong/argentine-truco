@@ -36,3 +36,21 @@ class Card:
 
     def envido_value(self) -> int:
         return 0 if self.rank in (10, 11, 12) else self.rank
+
+    def create_deck() -> list[Card]:
+        deck = [Card(r, s) for s in SUITS for r in RANKS]
+        random.shuffle(deck)
+        return deck
+    
+    
+    def calculate_envido(hand: list[Card]) -> int:
+        by_suit: dict[str, list[int]] = {s: [] for s in SUITS}
+        for c in hand:
+            by_suit[c.suit].append(c.envido_value())
+    
+        best = 0
+        for vals in by_suit.values():
+            if len(vals) >= 2:
+                vals.sort(reverse=True)
+                best = max(best, 20 + vals[0] + vals[1])
+        return best if best else max(c.envido_value() for c in hand)
