@@ -133,6 +133,32 @@ class MinimalTrucoGUI:
             self.canvas.create_text(x + 24, y + 25, text=str(card.rank), fill=col, font=("Sans", 10, "bold"))
             self._draw_suit(x + 50, y + 25, card.suit, s=0.65)
 
+    def new_match(self):
+            self.state = GameState()
+            self.start_round()
+    
+    def start_round(self):
+        if self.state.match_winner():
+            self.end_match()
+            return
+        self.state.reset_round()
+        self.p_card = None
+        self.a_card = None
+        self.awaiting = None
+        self.turn_player = self.state.player_is_hand
+        self.lead_player = self.turn_player
+        self.msg = "New round — " + ("Your lead" if self.turn_player else "AI lead")
+        self.render()
+        if not self.turn_player:
+            self.root.after(500, self.ai_step)
+
+    def end_match(self):
+        w = self.state.match_winner()
+        res = f"You win ({self.state.player_score}-{self.state.ai_score})" if w == "player" else f"AI wins ({self.state.ai_score}-{self.state.player_score})"
+        if messagebox.askyesno("Match Over", f"{res}\nPlay again?"):
+            self.new_match()
+
+
 def main():
     root = tk.Tk()
     MinimalTrucoGUI(root)
