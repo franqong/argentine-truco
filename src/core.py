@@ -218,3 +218,29 @@ def round_winner(state: GameState) -> str:
     return mano
 
 
+def ai_envido_action(state: GameState) -> str:
+    ev = calculate_envido(state.ai_hand)
+    if len(state.envido_chain) < 3 and ev >= 29 and "falta envido" not in state.envido_chain:
+        return "falta envido"
+    if len(state.envido_chain) == 1 and ev >= 25 and "real envido" not in state.envido_chain:
+        return "real envido"
+    if len(state.envido_chain) == 1 and state.envido_chain[-1] == "envido" and ev >= 23:
+        return "envido"
+    return "quiero" if ev >= 21 else "no quiero"
+
+
+def ai_truco_action(state: GameState) -> str:
+    strength = sum(c.card_power() for c in state.ai_hand)
+    if strength >= 30 and state.truco_level + 1 < 3:
+        return "raise"
+    if strength >= 18 or (state.truco_level == 0 and strength >= 13):
+        return "quiero"
+    return "no quiero"
+
+
+def ai_pick_card(hand: list[Card], lead_card: Card | None) -> Card:
+    ordered = sorted(hand, key=lambda c: c.card_power())
+    if lead_card is None:
+        return ordered[0]
+    winners = [c for c in ordered if c.card_power() >= lead_card.card_power()]
+    return winners[0] if winners else ordered[0]
