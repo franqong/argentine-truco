@@ -116,3 +116,41 @@ class GameState:
             return "player" if self.player_score > self.ai_score else "ai"
         return None
 
+
+def compute_envido_stakes(chain: list[str], state: GameState) -> tuple[int, int]:
+    refused = min(len(chain), 3)
+    if chain == ["envido", "envido"]:
+        accepted = 4
+    else:
+        last = chain[-1]
+        if last == "envido":
+            accepted = 2
+        elif last == "real envido":
+            accepted = 3
+        else:  # falta envido
+            accepted = max(1, state.target_score - max(state.player_score, state.ai_score))
+    return accepted, refused
+
+
+def get_envido_raises(chain: list[str]) -> list[str]:
+    if len(chain) >= 3:
+        return []
+    out = []
+    if len(chain) == 1 and chain[-1] == "envido":
+        out.append("envido")
+    if "real envido" not in chain:
+        out.append("real envido")
+    if "falta envido" not in chain:
+        out.append("falta envido")
+    return out
+
+
+def resolve_envido(state: GameState) -> tuple[str, int, int]:
+    p, a = calculate_envido(state.player_hand), calculate_envido(state.ai_hand)
+    if p > a:
+        return "player", p, a
+    if a > p:
+        return "ai", p, a
+    return ("player" if state.player_is_hand else "ai"), p, a
+
+
