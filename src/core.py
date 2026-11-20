@@ -54,3 +54,50 @@ class Card:
                 vals.sort(reverse=True)
                 best = max(best, 20 + vals[0] + vals[1])
         return best if best else max(c.envido_value() for c in hand)
+
+
+class GameState:
+    def __init__(self, target_score: int = TARGET_SCORE):
+        self.target_score = target_score
+        self.player_score = 0
+        self.ai_score = 0
+        self.player_is_hand = True
+        self.reset_round()
+
+    def reset_round(self):
+        self.deck = create_deck()
+        self.player_hand = [self.deck.pop() for _ in range(3)]
+        self.ai_hand = [self.deck.pop() for _ in range(3)]
+        self.played_player: list[Card] = []
+        self.played_ai: list[Card] = []
+        self.hands_history: list[str] = []
+        self.envido_available = True
+        self.envido_resolved = False
+        self.envido_chain: list[str] = []
+        self.truco_level = 0
+        self.truco_owner: str | None = None
+        self.round_over = False
+
+    def current_hand_points(self) -> int:
+            return {0: 1, 1: 2, 2: 3, 3: 4}[self.truco_level]
+    
+    def next_truco_name(self) -> str:
+        return {1: "truco", 2: "retruco", 3: "vale cuatro"}[self.truco_level + 1]
+    
+    def next_truco_points(self) -> int:
+        return {1: 2, 2: 3, 3: 4}[self.truco_level + 1]
+    
+    def can_call_truco(self, who: str) -> bool:
+        if self.truco_level >= 3:
+            return False
+    
+        # En la primera mano solo se puede cantar truco si ya se cantó el envido
+        is_first_hand = len(self.hands_history) == 0
+        envido_played_or_done = bool(self.envido_chain) or self.envido_resolved
+        if is_first_hand and not envido_played_or_done:
+            return False
+
+        if self.truco_level == 0:
+            return True
+
+        return self.truco_owner != who
