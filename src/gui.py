@@ -304,6 +304,60 @@ class MinimalTrucoGUI:
             self.awaiting = None
             self._ai_react_envido()
 
+    def call_truco(self):
+            if not self.can_act() or not self.state.can_call_truco("player"):
+                return
+            self._ai_react_truco()
+
+    def _ai_react_truco(self):
+        name = self.state.next_truco_name()
+        ref = self.state.current_hand_points()
+        act = ai_truco_action(self.state)
+        if act == "no quiero":
+            self.state.award_points("player", ref)
+            self.state.round_over = True
+            self.msg = f"AI passed {name.upper()} — You +{ref}"
+            self.render()
+            self.state.player_is_hand = not self.state.player_is_hand
+            self.root.after(800, self.start_round)
+        elif act == "raise":
+            self.state.truco_level += 1
+            self.state.truco_owner = "ai"
+            self.awaiting = "truco"
+            self.msg = f"AI raised {self.state.next_truco_name().upper()} ({self.state.next_truco_points()} pts)"
+            self.render()
+        else:
+            self.state.truco_level += 1
+            self.state.truco_owner = "ai"
+            self.msg = f"AI wanted — Round worth {self.state.current_hand_points()} pts"
+            self.render()
+
+    def resp_truco(self, choice: str):
+        if self.awaiting != "truco":
+            return
+        ref = self.state.current_hand_points()
+        if choice == "no quiero":
+            self.state.award_points("ai", ref)
+            self.state.round_over = True
+            self.awaiting = None
+            self.msg = f"Passed — AI +{ref}"
+            self.render()
+            self.state.player_is_hand = not self.state.player_is_hand
+            self.root.after(800, self.start_round)
+        elif choice == "quiero":
+            self.state.truco_level += 1
+            self.state.truco_owner = "player"
+            self.awaiting = None
+            self.msg = f"Wanted — Round worth {self.state.current_hand_points()} pts"
+            self.render()
+            if not self.turn_player:
+                self.root.after(500, self.ai_step)
+        else:
+            self.state.truco_level += 1
+            self.state.truco_owner = "player"
+            self.awaiting = None
+            self._ai_react_truco()
+
 def main():
     root = tk.Tk()
     MinimalTrucoGUI(root)
