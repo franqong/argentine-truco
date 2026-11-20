@@ -41,13 +41,13 @@ class Card:
         deck = [Card(r, s) for s in SUITS for r in RANKS]
         random.shuffle(deck)
         return deck
-    
-    
+
+
     def calculate_envido(hand: list[Card]) -> int:
         by_suit: dict[str, list[int]] = {s: [] for s in SUITS}
         for c in hand:
             by_suit[c.suit].append(c.envido_value())
-    
+
         best = 0
         for vals in by_suit.values():
             if len(vals) >= 2:
@@ -79,18 +79,18 @@ class GameState:
         self.round_over = False
 
     def current_hand_points(self) -> int:
-            return {0: 1, 1: 2, 2: 3, 3: 4}[self.truco_level]
-    
+        return {0: 1, 1: 2, 2: 3, 3: 4}[self.truco_level]
+
     def next_truco_name(self) -> str:
         return {1: "truco", 2: "retruco", 3: "vale cuatro"}[self.truco_level + 1]
-    
+
     def next_truco_points(self) -> int:
         return {1: 2, 2: 3, 3: 4}[self.truco_level + 1]
-    
+
     def can_call_truco(self, who: str) -> bool:
         if self.truco_level >= 3:
             return False
-    
+
         # En la primera mano solo se puede cantar truco si ya se cantó el envido
         is_first_hand = len(self.hands_history) == 0
         envido_played_or_done = bool(self.envido_chain) or self.envido_resolved
@@ -101,3 +101,16 @@ class GameState:
             return True
 
         return self.truco_owner != who
+
+    def award_points(self, winner: str, pts: int):
+        if winner == "player":
+            self.player_score += pts
+        else:
+            self.ai_score += pts
+
+        def match_winner(self) -> str | None:
+            if self.player_score >= self.target_score or self.ai_score >= self.target_score:
+                if self.player_score == self.ai_score:
+                    return "player" if self.player_is_hand else "ai"
+                return "player" if self.player_score > self.ai_score else "ai"
+            return None
