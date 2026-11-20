@@ -245,6 +245,65 @@ class MinimalTrucoGUI:
         self.state.player_is_hand = not self.state.player_is_hand
         self.root.after(800, self.start_round)
 
+
+    def call_envido(self, call: str):
+            # El jugador puede cantar envido antes de tirar su primera carta, incluso siendo pie
+            if not self.can_act() or self.state.envido_resolved or self.state.played_player:
+                return
+            self.state.envido_chain = [call]
+            self._ai_react_envido()
+
+    def _ai_react_envido(self):
+        acc, ref = compute_envido_stakes(self.state.envido_chain, self.state)
+        act = ai_envido_action(self.state)
+        if act == "no quiero":
+            self.state.award_points("player", ref)
+            self.state.envido_resolved = True
+            self.state.envido_available = False
+            self.msg = f"AI passed Envido — You +{ref}"
+            self.render()
+        elif act == "quiero":
+            self._settle_envido(acc)
+        else:
+            self.state.envido_chain.append(act)
+            self.awaiting = "envido"
+            a2, r2 = compute_envido_stakes(self.state.envido_chain, self.state)
+            self.msg = f"AI raised {act.upper()} (Want: {a2} | Pass: {r2})"
+            self.render()
+
+    def _settle_envido(self, pts: int):
+        w, p, a = resolve_envido(self.state)
+        self.state.award_points(w, pts)
+        self.state.envido_resolved = True
+        self.state.envido_available = False
+        self.awaiting = None
+        self.msg = f"Envido You {p} vs AI {a} -> {'You' if w == 'player' else 'AI'} +{pts}"
+        self.render()
+        if self.state.match_winner():
+            self.root.after(700, self.end_match)
+        elif not self.turn_player:
+            self.root.after(500, self.ai_step)
+
+    def resp_envido(self, choice: str):
+        if self.awaiting != "envido":
+            return
+        acc, ref = compute_envido_stakes(self.state.envido_chain, self.state)
+        if choice == "no quiero":
+            self.state.award_points("ai", ref)
+            self.state.envido_resolved = True
+            self.state.envido_available = False
+            self.awaiting = None
+            self.msg = f"Passed Envido — AI +{ref}"
+            self.render()
+            if not self.turn_player:
+                self.root.after(500, self.ai_step)
+        elif choice == "quiero":
+            self._settle_envido(acc)
+        else:
+            self.state.envido_chain.append(choice)
+            self.awaiting = None
+            self._ai_react_envido()
+
 def main():
     root = tk.Tk()
     MinimalTrucoGUI(root)
