@@ -1,0 +1,1 @@
+"""Argentine Truco: A Card Game package."""
