@@ -127,11 +127,11 @@ class MinimalTrucoGUI:
             label = FIG_NAME.get(card.rank, f"Env {card.envido_value()}")
             self.canvas.create_text(x + 37, y + 81, text=label, fill="#555", font=("Sans", 8), tags=tag)
     
-        def _mini_card(self, x: int, y: int, card: Card):
-            col = SUIT_COLOR[card.suit]
-            self.canvas.create_rectangle(x, y, x + 75, y + 50, fill="#fffdf8", outline="#222")
-            self.canvas.create_text(x + 24, y + 25, text=str(card.rank), fill=col, font=("Sans", 10, "bold"))
-            self._draw_suit(x + 50, y + 25, card.suit, s=0.65)
+    def _mini_card(self, x: int, y: int, card: Card):
+        col = SUIT_COLOR[card.suit]
+        self.canvas.create_rectangle(x, y, x + 75, y + 50, fill="#fffdf8", outline="#222")
+        self.canvas.create_text(x + 24, y + 25, text=str(card.rank), fill=col, font=("Sans", 10, "bold"))
+        self._draw_suit(x + 50, y + 25, card.suit, s=0.65)
 
     def new_match(self):
             self.state = GameState()
@@ -157,6 +157,54 @@ class MinimalTrucoGUI:
         res = f"You win ({self.state.player_score}-{self.state.ai_score})" if w == "player" else f"AI wins ({self.state.ai_score}-{self.state.player_score})"
         if messagebox.askyesno("Match Over", f"{res}\nPlay again?"):
             self.new_match()
+
+    def can_act(self) -> bool:
+            return not self.state.round_over and self.turn_player and self.awaiting is None and self.p_card is None
+
+    def play_card(self, idx: int):
+        if not self.can_act() or idx >= len(self.state.player_hand):
+            return
+        self.p_card = self.state.player_hand.pop(idx)
+        self.state.played_player.append(self.p_card)
+        self.state.envido_available = False
+        self.turn_player = False
+        self.msg = f"You played {self.p_card}"
+        self.render()
+        self.root.after(500, self.finish_hand if self.a_card else self.ai_step)
+
+    def ai_step(self):
+        if self.state.round_over or self.turn_player or self.awaiting:
+            return
+        if self.state.envido_available and not self.state.envido_resolved and not self.state.played_ai:
+            if calculate_envido(self.state.ai_hand) >= 24:
+                call = "real envido" if calculate_envido(self.state.ai_hand) >= 27 else "envido"
+                self.state.envido_chain = [call]
+                self.awaiting = "envido"
+                acc, ref = compute_envido_stakes(self.state.envido_chain, self.state)
+                self.msg = f"AI calls {call.upper()} (Want: {acc} | Pass: {ref})"
+                self.render()
+                return
+        if (
+            self.state.truco_level == 0
+            and self.state.can_call_truco("ai")
+            and sum(c.card_power() for c in self.state.ai_hand) >= 24
+        ):
+            self.awaiting = "truco"
+            self.msg = f"AI calls TRUCO (Want: {self.state.next_truco_points()} | Pass: {self.state.current_hand_points()})"
+            self.render()
+            return
+
+        lead = self.p_card if self.lead_player else None
+        self.a_card = ai_pick_card(self.state.ai_hand, lead)
+        self.state.ai_hand.remove(self.a_card)
+        self.state.played_ai.append(self.a_card)
+        self.state.envido_available = False
+        self.turn_player = True
+        self.msg = f"AI played {self.a_card}"
+        self.render()
+        if self.p_card:
+            self.root.after(500, self.finish_hand)
+
 
 
 def main():
